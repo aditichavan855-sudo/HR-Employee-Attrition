@@ -1,30 +1,20 @@
 import streamlit as st
+import pandas as pd
 
 
 def generate_insights(df):
 
     st.markdown("## 📌 Key Insights")
 
-
-    # Create numeric attrition column
+    # Create a copy
     insight_df = df.copy()
 
-    if insight_df["Attrition"].dtype == "object":
-
-        insight_df["Attrition_Value"] = (
-            insight_df["Attrition"]
-            .map({
-                "Yes": 1,
-                "No": 0
-            })
-        )
-
-    else:
-
-        insight_df["Attrition_Value"] = (
-            insight_df["Attrition"]
-        )
-
+    # Always convert Attrition to numeric
+    insight_df["Attrition_Value"] = (
+        insight_df["Attrition"]
+        .eq("Yes")
+        .astype(int)
+    )
 
     # =====================================================
     # Highest Attrition Department
@@ -37,19 +27,13 @@ def generate_insights(df):
         .sort_values(ascending=False)
     )
 
-
     highest_department = dept_attrition.index[0]
-
-    highest_rate = (
-        dept_attrition.iloc[0] * 100
-    )
-
+    highest_rate = dept_attrition.iloc[0] * 100
 
     st.info(
         f"🔥 Highest Attrition Department: "
         f"**{highest_department} ({highest_rate:.1f}%)**"
     )
-
 
     # =====================================================
     # Overtime Insight
@@ -61,35 +45,28 @@ def generate_insights(df):
         .mean()
     )
 
-
     if "Yes" in overtime_attrition.index:
 
-        overtime_rate = (
-            overtime_attrition["Yes"] * 100
-        )
-
+        overtime_rate = overtime_attrition["Yes"] * 100
 
         st.warning(
             f"⏰ Overtime Attrition Rate: "
             f"**{overtime_rate:.1f}%**"
         )
 
-
     # =====================================================
     # Salary Insight
     # =====================================================
 
-    avg_income = (
-        insight_df["MonthlyIncome"]
-        .mean()
-    )
-
+    avg_income = pd.to_numeric(
+        insight_df["MonthlyIncome"],
+        errors="coerce"
+    ).mean()
 
     st.success(
         f"💰 Average Monthly Income: "
         f"**₹{avg_income:,.0f}**"
     )
-
 
     # =====================================================
     # Workforce Insight
@@ -101,13 +78,11 @@ def generate_insights(df):
         .idxmax()
     )
 
-
     employee_count = (
         insight_df["Department"]
         .value_counts()
         .max()
     )
-
 
     st.write(
         f"👥 Largest Workforce: "
