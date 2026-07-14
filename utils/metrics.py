@@ -1,27 +1,46 @@
-def calculate_metrics(df):
-    """Calculate dashboard KPIs."""
+import streamlit as st
+import pandas as pd
 
-    # Convert Yes/No to 1/0
-    attrition_numeric = df["Attrition"].map({
-        "Yes": 1,
-        "No": 0
-    })
+
+def calculate_metrics(df):
+
+    # Always convert Attrition to numeric
+    attrition_numeric = (
+        df["Attrition"]
+        .replace({
+            "Yes": 1,
+            "No": 0
+        })
+        .astype(float)
+    )
+
+    total_employees = len(df)
+
+    attrition_rate = attrition_numeric.mean() * 100
+
+    average_age = pd.to_numeric(
+        df["Age"],
+        errors="coerce"
+    ).mean()
+
+    average_income = pd.to_numeric(
+        df["MonthlyIncome"],
+        errors="coerce"
+    ).mean()
 
     return {
-        "total_employees": len(df),
 
-        "attrition_rate": round(
-            attrition_numeric.mean() * 100,
-            1
-        ),
+        "total_employees": total_employees,
 
-        "average_age": round(
-            df["Age"].mean(),
-            1
-        ),
+        "attrition_rate": round(attrition_rate, 2),
 
-        "average_income": round(
-            df["MonthlyIncome"].mean(),
-            0
-        )
+        "average_age": round(average_age, 1),
+
+        "average_income": round(average_income, 0)
+
     }
+
+
+def kpi_card(title, value):
+
+    st.metric(title, value)
